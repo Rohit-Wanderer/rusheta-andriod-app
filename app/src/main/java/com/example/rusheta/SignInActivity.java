@@ -10,6 +10,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -23,6 +27,7 @@ public class SignInActivity extends AppCompatActivity {
     EditText phone;
     EditText password;
     private static final String BASE_URL = "http://10.0.2.2:3000";
+//    private static final String BASE_URL = "http://localhost:3000";
 //    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
 
     Retrofit retrofit = new Retrofit.Builder()
@@ -45,8 +50,19 @@ public class SignInActivity extends AppCompatActivity {
         phone = findViewById(R.id.edittext_phone);
         password = findViewById(R.id.edittext_password);
 
+        String phoneNumber = phone.getText().toString();
         if(!name.getText().toString().isEmpty()&&!phone.getText().toString().isEmpty()&&!password.getText().toString().isEmpty()) {
-                createUser(phone.getText().toString(),name.getText().toString(),password.getText().toString());
+
+            PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+            phoneNumber = phone.getText().toString();
+            try {
+                Phonenumber.PhoneNumber phoneNumberProto = phoneUtil.parse(phoneNumber, "IN");
+                phoneNumber = phoneUtil.format(phoneNumberProto, PhoneNumberUtil.PhoneNumberFormat.E164);
+                Log.i("PHONE NUMBERS SIGN IN",phoneNumber);
+            } catch (NumberParseException e) {
+                e.printStackTrace();
+            }
+            createUser(phoneNumber,name.getText().toString(),password.getText().toString());
         }else
             Toast.makeText(this, "Enter Valid Details", Toast.LENGTH_SHORT).show();
 
@@ -110,7 +126,7 @@ public class SignInActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
-                Log.i("createUserLogfail",t.toString());
+                Log.i("createUserLogFail",t.toString());
             }
         });
     }

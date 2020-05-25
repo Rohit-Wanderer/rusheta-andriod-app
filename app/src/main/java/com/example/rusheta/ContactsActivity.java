@@ -24,6 +24,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -37,6 +41,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ContactsActivity extends AppCompatActivity {
 
     private static final String BASE_URL = "http://10.0.2.2:3000";
+//    private static final String BASE_URL = "http://localhost:3000";
 //    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
 
     Retrofit retrofit = new Retrofit.Builder()
@@ -56,7 +61,7 @@ public class ContactsActivity extends AppCompatActivity {
 
         protected void onPostExecute(ArrayList<ContactDTO> contacts) {
 
-            ArrayList<String> contactList = new ArrayList<>();
+            ArrayList<String> contactList = new ArrayList<String>();
             Iterator<ContactDTO> iter = contacts.iterator();
             while (iter.hasNext()) {
                 List<DataDTO> i = iter.next().getPhoneList();
@@ -80,17 +85,18 @@ public class ContactsActivity extends AppCompatActivity {
                     try {
 
                         List<String> validContacts = response.body().getContacts();
-                        Log.i("Contacts",validContacts.toString());
+                        Log.i("Valid Contacts",validContacts.toString());
                         Iterator<ContactDTO> iter = contacts.iterator();
                         while (iter.hasNext()) {
                             List<DataDTO> i = iter.next().getPhoneList();
                             if(i.size() != 0) {
-                                if (validContacts.contains(i.get(0).getDataValue())){
+                                if (!validContacts.contains(i.get(0).getDataValue())){
                                     iter.remove();
                                 }
                             }
                         }
 
+                        Log.i("CONTACTS SIZE::", String.valueOf(contacts.size()));
                         myContactsAdapter = new MyContactsAdapter(ContactsActivity.this,contacts);
                         recyclerView.setAdapter(myContactsAdapter);
 
@@ -117,13 +123,15 @@ public class ContactsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contacts);
-
-        contacts = new ArrayList<>();
+        contacts = new ArrayList<ContactDTO>();
         recyclerView = findViewById(R.id.contactsRecyclerView);
         LinearLayoutManager myLinearLayoutManager = new LinearLayoutManager(ContactsActivity.this);
         recyclerView.setLayoutManager(myLinearLayoutManager);
         myContactsAdapter = new MyContactsAdapter(ContactsActivity.this, contacts);
         recyclerView.setAdapter(myContactsAdapter);
+
+
+
 
         if(!hasPhoneContactsPermission(Manifest.permission.READ_CONTACTS))
             requestPermission(Manifest.permission.READ_CONTACTS);
@@ -361,6 +369,16 @@ public class ContactsActivity extends AppCompatActivity {
                 // Phone.TYPE == data2
                 int phoneTypeInt = cursor.getInt(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
                 String phoneTypeStr = getPhoneTypeString(phoneTypeInt);
+
+                PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+                try {
+                    Phonenumber.PhoneNumber phoneNumberProto = phoneUtil.parse(phoneNumber, "IN");
+                    phoneNumber = phoneUtil.format(phoneNumberProto, PhoneNumberUtil.PhoneNumberFormat.E164);
+                    Log.i("PHONE NUMBERS",phoneNumber);
+                } catch (NumberParseException e) {
+                    e.printStackTrace();
+                }
+
                 contact.getPhoneList().add(new DataDTO(phoneTypeInt,phoneNumber));
                 ret.add("Phone Number : " + phoneNumber);
                 ret.add("Phone Type Integer : " + phoneTypeInt);

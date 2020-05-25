@@ -27,6 +27,6 @@ public interface JsonApiPlaceHolder {
     @POST("/image/download")
     Call<ResponseBody> getImage(@Body ImagePath path);
 
-    @POST("contacts")
+    @POST("/contacts")
     Call<Contacts> getContacts(@Body Contacts contacts);
 }
