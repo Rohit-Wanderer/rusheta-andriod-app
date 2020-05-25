@@ -2,6 +2,7 @@ package com.example.rusheta;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -69,6 +70,9 @@ public class ChatActivity extends AppCompatActivity {
     ArrayList<UserMessage> messageList = new ArrayList<>();
     private Socket socket;
     private String Username;
+    private Chat chat;
+    String myPhone;
+    SharedPreferences sharedPreferences;
 
 
     @Override
@@ -96,13 +100,15 @@ public class ChatActivity extends AppCompatActivity {
     {
         try {
             mSocket = IO.socket(BASE_URL);
-        } catch (URISyntaxException e) {}
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
     }
 
     public void displayMessage(String message,String username){
         Date now = new Date();
-        UserMessage newmsg = new UserText(VIEW_TYPE_TEXT_RECEIVED,message,now,username);
-        messageList.add(newmsg);
+        UserMessage newMsg = new UserText(VIEW_TYPE_TEXT_RECEIVED,message,now,username);
+        messageList.add(newMsg);
         myListAdapter.notifyDataSetChanged();
         recyclerView.setAdapter(myListAdapter);
     }
@@ -150,11 +156,6 @@ public class ChatActivity extends AppCompatActivity {
                 t.printStackTrace();
             }
         });
-//        Date now = new Date();
-//        //UserMessage newmsg = new UserText(VIEW_TYPE_TEXT_RECEIVED,message,now,username);
-//        messageList.add(newmsg);
-//        myListAdapter.notifyDataSetChanged();
-//        recyclerView.setAdapter(myListAdapter);
     }
 
 
@@ -214,11 +215,11 @@ public class ChatActivity extends AppCompatActivity {
 
         if(!editText.getText().toString().isEmpty()){
             String msg = editText.getText().toString();
-            mSocket.emit("messagedetection",Username,msg);
+            mSocket.emit("messageDetection",Username,chat.getPhone(),msg);
 
             Date now = new Date();
-            UserMessage newmsg = new UserText(VIEW_TYPE_TEXT_SENT,msg,now,Username);
-            messageList.add(newmsg);
+            UserMessage newMsg = new UserText(VIEW_TYPE_TEXT_SENT,msg,now,Username);
+            messageList.add(newMsg);
             myListAdapter.notifyDataSetChanged();
             recyclerView.setAdapter(myListAdapter);
             editText.setText("");
@@ -226,8 +227,6 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void sendImage(Bitmap image,byte[] selectedImage){
-
-
         RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), selectedImage);
         MultipartBody.Part body = MultipartBody.Part.createFormData("image", "image.jpg", requestFile);
         Call<Response> call = jsonApiPlaceHolder.uploadImage(body);
@@ -238,20 +237,12 @@ public class ChatActivity extends AppCompatActivity {
 
                 if (response.isSuccessful()) {
 
-
                     Date now = new Date();
                     UserMessage newmsg = new UserImage(VIEW_TYPE_IMAGE_SENT,image,now,Username);
                     messageList.add(newmsg);
                     myListAdapter.notifyDataSetChanged();
                     Log.i("path", response.body().getPath());
-                    mSocket.emit("imageDetection",Username,response.body().getPath());
-
-                    //recyclerView.setAdapter(myListAdapter);
-
-//                    Response responseBody = response.body();
-//                    mBtImageShow.setVisibility(View.VISIBLE);
-//                    mImageUrl = URL + responseBody.getPath();
-//                    Snackbar.make(findViewById(R.id.content), responseBody.getMessage(),Snackbar.LENGTH_SHORT).show();
+                    mSocket.emit("imageDetection",Username,chat.getPhone(),response.body().getPath());
 
                 } else {
 
@@ -262,6 +253,7 @@ public class ChatActivity extends AppCompatActivity {
                     try {
 
                         Response errorResponse = gson.fromJson(errorBody.string(), Response.class);
+                        Log.i("SendImage","Error Response");
 
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -330,22 +322,26 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Chat chat = (Chat) getIntent().getExtras().getSerializable("Chat");
+        chat = (Chat) getIntent().getExtras().getSerializable("Chat");
         Username = chat.getName();
-        setTitle(Username);
+        setTitle(chat.getName());
         setContentView(R.layout.activity_chat);
+
+        sharedPreferences
+                = getSharedPreferences("RushetaData",
+                MODE_PRIVATE);
+        myPhone = sharedPreferences.getString("phone","");
 
         recyclerView = findViewById(R.id.chatRecyclerView);
         LinearLayoutManager mylinaerLayoutManager = new LinearLayoutManager(this);
         mylinaerLayoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(mylinaerLayoutManager);
 
-
         myListAdapter = new MyListAdapter(this,messageList,Username);
         recyclerView.setAdapter(myListAdapter);
 
         mSocket.connect();
-        mSocket.emit("join",Username);
+        mSocket.emit("join",myPhone);
         mSocket.on("message", onNewMessage);
         mSocket.on("image", onNewImage);
 
