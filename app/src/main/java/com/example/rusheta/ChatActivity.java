@@ -119,8 +119,13 @@ public class ChatActivity extends AppCompatActivity {
         ImagePath imagePath = new ImagePath();
 
         imagePath.setPath(path);
+        SharedPreferences sharedPreferences
+                = getSharedPreferences("RushetaData",
+                MODE_PRIVATE);
 
-        Call<ResponseBody> call = jsonApiPlaceHolder.getImage(imagePath);
+        String token = sharedPreferences.getString("token","");
+
+        Call<ResponseBody> call = jsonApiPlaceHolder.getImage(token,imagePath);
 
         call.enqueue(new Callback<ResponseBody>() {
             @Override
@@ -230,7 +235,15 @@ public class ChatActivity extends AppCompatActivity {
     public void sendImage(Bitmap image,byte[] selectedImage){
         RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), selectedImage);
         MultipartBody.Part body = MultipartBody.Part.createFormData("image", "image.jpg", requestFile);
-        Call<Response> call = jsonApiPlaceHolder.uploadImage(body);
+
+        SharedPreferences sharedPreferences
+                = getSharedPreferences("RushetaData",
+                MODE_PRIVATE);
+
+        String token = sharedPreferences.getString("token","");
+
+
+        Call<Response> call = jsonApiPlaceHolder.uploadImage(token,body);
 
         call.enqueue(new Callback<Response>() {
             @Override

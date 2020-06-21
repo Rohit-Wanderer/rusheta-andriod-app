@@ -12,14 +12,17 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.ContactsContract;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -39,7 +42,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ContactsActivity extends AppCompatActivity {
-
+    private static final String TAG = "ContactsActivity";
     private static final String BASE_URL = "http://10.0.2.2:3000";
 //    private static final String BASE_URL = "http://localhost:3000";
 //    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
@@ -61,55 +64,82 @@ public class ContactsActivity extends AppCompatActivity {
 
         protected void onPostExecute(ArrayList<ContactDTO> contacts) {
 
-            ArrayList<String> contactList = new ArrayList<String>();
-            Iterator<ContactDTO> iter = contacts.iterator();
-            while (iter.hasNext()) {
-                List<DataDTO> i = iter.next().getPhoneList();
-                if(i.size() != 0){
-                    contactList.add(i.get(0).getDataValue());
-                }
+            SharedPreferences sharedPreferences
+                    = getSharedPreferences("RushetaData",
+                    MODE_PRIVATE);
+            if(sharedPreferences.getString("secret1","").isEmpty()){
+                // LOGOUT
+                Log.i("GETContactsTASK","Illegal state exception");
+                return;
             }
-            Contacts contactJSON = new Contacts(contactList);
 
-            Call<Contacts> call = jsonApiPlaceHolder.getContacts(contactJSON);
+            String key = sharedPreferences.getString("secret1","");
+            byte [] keyByte = Base64.decode(key, Base64.DEFAULT);
 
-            call.enqueue(new Callback<Contacts>() {
-                @Override
-                public void onResponse(Call<Contacts> call, Response<Contacts> response) {
+            String IV = sharedPreferences.getString("secret2","");
+            byte [] IVByte = Base64.decode(IV, Base64.DEFAULT);
 
-                    if(!response.isSuccessful()){
-                        Log.i("GetContactsNOOOOSucesss",""+response.code());
-                        return;
+            try {
+                CryptoClass cryptoClass = new CryptoClass(keyByte,IVByte);
+
+                ArrayList<String> contactList = new ArrayList<String>();
+                Iterator<ContactDTO> iter = contacts.iterator();
+                while (iter.hasNext()) {
+                    List<DataDTO> i = iter.next().getPhoneList();
+                    if(i.size() != 0){
+                        String ctc = i.get(0).getDataValue();
+                        byte[] encCtc = cryptoClass.encrypt(ctc.getBytes());
+                        String encCtsString = new String(Base64.encode(encCtc, Base64.DEFAULT));
+                        contactList.add(encCtsString);
                     }
+                }
+                Contacts contactJSON = new Contacts(contactList);
 
-                    try {
+                String token = sharedPreferences.getString("token","");
 
-                        List<String> validContacts = response.body().getContacts();
-                        Log.i("Valid Contacts",validContacts.toString());
-                        Iterator<ContactDTO> iter = contacts.iterator();
-                        while (iter.hasNext()) {
-                            List<DataDTO> i = iter.next().getPhoneList();
-                            if(i.size() != 0) {
-                                if (!validContacts.contains(i.get(0).getDataValue())){
-                                    iter.remove();
-                                }
-                            }
+                Call<Contacts> call = jsonApiPlaceHolder.getContacts(token,contactJSON);
+
+                call.enqueue(new Callback<Contacts>() {
+                    @Override
+                    public void onResponse(Call<Contacts> call, Response<Contacts> response) {
+
+                        if(!response.isSuccessful()){
+                            Log.i("GetContactsNOOOOSucesss",""+response.code());
+                            return;
                         }
 
-                        Log.i("CONTACTS SIZE::", String.valueOf(contacts.size()));
-                        myContactsAdapter = new MyContactsAdapter(ContactsActivity.this,contacts);
-                        recyclerView.setAdapter(myContactsAdapter);
+                        try {
 
-                    }catch (Exception e){
-                        e.printStackTrace();
+                            List<String> validContacts = response.body().getContacts();
+                            Log.i("Valid Contacts",validContacts.toString());
+                            Iterator<ContactDTO> iter = contacts.iterator();
+                            while (iter.hasNext()) {
+                                List<DataDTO> i = iter.next().getPhoneList();
+                                if(i.size() != 0) {
+                                    if (!validContacts.contains(i.get(0).getDataValue())){
+                                        iter.remove();
+                                    }
+                                }
+                            }
+
+                            Log.i("CONTACTS SIZE::", String.valueOf(contacts.size()));
+                            myContactsAdapter = new MyContactsAdapter(ContactsActivity.this,contacts);
+                            recyclerView.setAdapter(myContactsAdapter);
+
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
                     }
-                }
 
-                @Override
-                public void onFailure(Call<Contacts> call, Throwable t) {
+                    @Override
+                    public void onFailure(Call<Contacts> call, Throwable t) {
 
-                }
-            });
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
 
         @Override

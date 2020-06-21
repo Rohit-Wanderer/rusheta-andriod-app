@@ -3,6 +3,7 @@ package com.example.rusheta;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -35,6 +36,8 @@ public class SignInActivity extends AppCompatActivity {
             .addConverterFactory(GsonConverterFactory.create())
             .build();
     JsonApiPlaceHolder jsonApiPlaceHolder = retrofit.create(JsonApiPlaceHolder.class);
+
+
 
     public void SignIn(){
         Intent i  = new Intent(SignInActivity.this, MainActivity.class);
@@ -75,6 +78,7 @@ public class SignInActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences
                 = getSharedPreferences("RushetaData",
                 MODE_PRIVATE);
+
 //        sharedPreferences.edit().clear().commit();
 
         if(!sharedPreferences.getString("token","").isEmpty()){
@@ -90,44 +94,69 @@ public class SignInActivity extends AppCompatActivity {
     }
 
     private void createUser(String phone,String name,String password){
-        User user = new User(name,phone,password);
 
-        Call<User> call = jsonApiPlaceHolder.createUser(user);
-        call.enqueue(new Callback<User>() {
-            @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                if(!response.isSuccessful()){
-                    Log.i("createUserLognosucess",""+response.code());
-                    return;
+        try {
+            CryptoClass cryptoClass = new CryptoClass();
+
+            String secret1 = cryptoClass.encryptToRSAString(cryptoClass.getKey());
+
+            String secret2 = cryptoClass.encryptToRSAString(cryptoClass.getIV());
+
+            String Phone = new String(Base64.encode(cryptoClass.encrypt(phone.getBytes()), Base64.DEFAULT));
+
+            String Name = new String(Base64.encode(cryptoClass.encrypt(name.getBytes()), Base64.DEFAULT));
+
+            String Password = new String(Base64.encode(cryptoClass.encrypt(password.getBytes()), Base64.DEFAULT));
+
+            ///Double Encryption logic.
+
+            User user = new User(Name,Phone,Password,secret1,secret2);
+            Call<User> call = jsonApiPlaceHolder.createUser(user);
+            call.enqueue(new Callback<User>() {
+                @Override
+                public void onResponse(Call<User> call, Response<User> response) {
+                    if(!response.isSuccessful()){
+                        Log.i("createUserLogNoSuccess",""+response.code());
+                        return;
+                    }
+
+                    SharedPreferences sharedPreferences
+                            = getSharedPreferences("RushetaData",
+                            MODE_PRIVATE);
+
+                    SharedPreferences.Editor myEdit
+                            = sharedPreferences.edit();
+
+                    myEdit.putString(
+                            "name",
+                            response.body().getName());
+                    myEdit.putString(
+                            "phone",
+                            response.body().getPhone());
+                    myEdit.putString(
+                            "secret1",
+                            new String(Base64.encode(cryptoClass.getKey(), Base64.DEFAULT)));
+                    myEdit.putString(
+                            "secret2",
+                            new String(Base64.encode(cryptoClass.getIV(), Base64.DEFAULT)));
+
+                    Log.i("user",response.body().getName());
+                    myEdit.putString("token",response.body().getTokens().get(0).getToken());
+                    Log.i("user",response.body().getTokens().get(0).getToken());
+
+                    myEdit.commit();
+
+                    SignIn();
                 }
 
-                SharedPreferences sharedPreferences
-                        = getSharedPreferences("RushetaData",
-                        MODE_PRIVATE);
+                @Override
+                public void onFailure(Call<User> call, Throwable t) {
+                    Log.i("createUserLogFail",t.toString());
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
 
-                SharedPreferences.Editor myEdit
-                        = sharedPreferences.edit();
-
-                myEdit.putString(
-                        "name",
-                        response.body().getName());
-                myEdit.putString(
-                        "phone",
-                        response.body().getPhone());
-
-                Log.i("user",response.body().getName());
-                myEdit.putString("token",response.body().getTokens().get(0).getToken());
-                Log.i("user",response.body().getTokens().get(0).getToken());
-
-                myEdit.commit();
-
-                SignIn();
-            }
-
-            @Override
-            public void onFailure(Call<User> call, Throwable t) {
-                Log.i("createUserLogFail",t.toString());
-            }
-        });
+        }
     }
 }

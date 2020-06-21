@@ -21,9 +21,33 @@ public class User {
     @Expose
     private String password;
 
+    @SerializedName("secret1")
+    @Expose
+    private String secret1;
+
+    @SerializedName("secret2")
+    @Expose
+    private String secret2;
+
     @SerializedName("tokens")
     @Expose
     private List<Token> tokens = null;
+
+    public String getSecret1() {
+        return secret1;
+    }
+
+    public void setSecret1(String secret1) {
+        this.secret1 = secret1;
+    }
+
+    public String getSecret2() {
+        return secret2;
+    }
+
+    public void setSecret2(String secret2) {
+        this.secret2 = secret2;
+    }
 
     public void setName(String name) {
         this.name = name;
@@ -57,9 +81,11 @@ public class User {
         return password;
     }
 
-    public User(String name, String phone, String password) {
+    public User(String name, String phone, String password, String secret1, String secret2) {
         this.name = name;
         this.phone = phone;
         this.password = password;
+        this.secret1 = secret1;
+        this.secret2 = secret2;
     }
 }
