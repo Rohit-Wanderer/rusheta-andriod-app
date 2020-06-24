@@ -1,6 +1,5 @@
 package com.example.rusheta;
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -410,5 +409,3 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 }
-
-

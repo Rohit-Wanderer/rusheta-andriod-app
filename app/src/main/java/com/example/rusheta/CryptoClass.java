@@ -1,22 +1,11 @@
 package com.example.rusheta;
-import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
-
-import androidx.security.crypto.MasterKeys;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.X509EncodedKeySpec;
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -124,13 +113,5 @@ public class CryptoClass {
         Log.i("AES key",s);
         Log.i("IV",b);
 
-    }
-
-    public static void setIV(byte[] IV) {
-        CryptoClass.IV = IV;
-    }
-
-    public static void setKey(byte[] key) {
-        CryptoClass.key = key;
     }
 }

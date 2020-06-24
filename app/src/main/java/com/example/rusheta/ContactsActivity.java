@@ -2,29 +2,23 @@ package com.example.rusheta;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ContentResolver;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.provider.ContactsContract;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -104,7 +98,7 @@ public class ContactsActivity extends AppCompatActivity {
                     public void onResponse(Call<Contacts> call, Response<Contacts> response) {
 
                         if(!response.isSuccessful()){
-                            Log.i("GetContactsNOOOOSucesss",""+response.code());
+                            Log.i("GetContactsNOSucesss",""+response.code());
                             return;
                         }
 
@@ -319,12 +313,6 @@ public class ContactsActivity extends AppCompatActivity {
         return ret;
     }
 
-    /*
-     *  Return data column value by mimetype column value.
-     *  Because for each mimetype there has not only one related value,
-     *  such as Organization.CONTENT_ITEM_TYPE need return company, department, title, job description etc.
-     *  So the return is a list string, each string for one column value.
-     * */
     private List<String> getColumnValueByMimetype(Cursor cursor, String mimeType, ContactDTO contact )
     {
         List<String> ret = new ArrayList<String>();
@@ -346,17 +334,6 @@ public class ContactsActivity extends AppCompatActivity {
                 ret.add("Email Int Type : " + emailType);
                 ret.add("Email String Type : " + emailTypeStr);
                 break;
-
-            // Get im data.
-//            case ContactsContract.CommonDataKinds.Im.CONTENT_ITEM_TYPE:
-//                // Im.PROTOCOL == data5
-//                String imProtocol = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Im.PROTOCOL));
-//                // Im.DATA == data1
-//                String imId = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Im.DATA));
-//
-//                ret.add("IM Protocol : " + imProtocol);
-//                ret.add("IM ID : " + imId);
-//                break;
 
             // Get nickname
             case ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE:
@@ -452,80 +429,6 @@ public class ContactsActivity extends AppCompatActivity {
                 ret.add("Family Name : " + familyName);
                 break;
 
-            // Get postal address.
-//            case ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE:
-//                // StructuredPostal.COUNTRY == data10
-//                String country = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY));
-//                // StructuredPostal.CITY == data7
-//                String city = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.CITY));
-//                // StructuredPostal.REGION == data8
-//                String region = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.REGION));
-//                // StructuredPostal.STREET == data4
-//                String street = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.STREET));
-//                // StructuredPostal.POSTCODE == data9
-//                String postcode = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE));
-//                // StructuredPostal.TYPE == data2
-//                int postType = cursor.getInt(cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.TYPE));
-//                String postTypeStr = getEmailTypeString(postType);
-//
-//
-//                ret.add("Country : " + country);
-//                ret.add("City : " + city);
-//                ret.add("Region : " + region);
-//                ret.add("Street : " + street);
-//                ret.add("Postcode : " + postcode);
-//                ret.add("Post Type Integer : " + postType);
-//                ret.add("Post Type String : " + postTypeStr);
-//                break;
-
-            // Get identity.
-//            case ContactsContract.CommonDataKinds.Identity.CONTENT_ITEM_TYPE:
-//                // Identity.IDENTITY == data1
-//                String identity = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Identity.IDENTITY));
-//                // Identity.NAMESPACE == data2
-//                String namespace = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Identity.NAMESPACE));
-//
-//                ret.add("Identity : " + identity);
-//                ret.add("Identity Namespace : " + namespace);
-//                break;
-
-            // Get photo.
-//            case ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE:
-//                // Photo.PHOTO == data15
-//                String photo = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Photo.PHOTO));
-//                // Photo.PHOTO_FILE_ID == data14
-//                String photoFileId = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Photo.PHOTO_FILE_ID));
-//
-//                ret.add("Photo : " + photo);
-//                ret.add("Photo File Id: " + photoFileId);
-//                break;
-
-            // Get group membership.
-//            case ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE:
-//                // GroupMembership.GROUP_ROW_ID == data1
-//                int groupId = cursor.getInt(cursor.getColumnIndex(ContactsContract.CommonDataKinds.GroupMembership.GROUP_ROW_ID));
-//                ret.add("Group ID : " + groupId);
-//                break;
-
-            // Get website.
-//            case ContactsContract.CommonDataKinds.Website.CONTENT_ITEM_TYPE:
-//                // Website.URL == data1
-//                String websiteUrl = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Website.URL));
-//                // Website.TYPE == data2
-//                int websiteTypeInt = cursor.getInt(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Website.TYPE));
-//                String websiteTypeStr = getEmailTypeString(websiteTypeInt);
-//
-//                ret.add("Website Url : " + websiteUrl);
-//                ret.add("Website Type Integer : " + websiteTypeInt);
-//                ret.add("Website Type String : " + websiteTypeStr);
-//                break;
-
-            // Get note.
-//            case ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE:
-//                // Note.NOTE == data1
-//                String note = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Note.NOTE));
-//                ret.add("Note : " + note);
-//                break;
 
         }
 
