@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
-            Intent i  = new Intent(MainActivity.this, ContactsActivity.class);
+            Intent i  = new Intent(MainActivity.this, Contacts2Activity.class);
             startActivityForResult(i,1);
         });
     }
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
             }catch(Exception e){
                 e.printStackTrace();
             }
-        }else if(requestCode == 2){
+        }else if(requestCode == 2 && resultCode == RESULT_OK && data != null){
 
         }else
             Toast.makeText(this, "Please select Contact", Toast.LENGTH_SHORT).show();

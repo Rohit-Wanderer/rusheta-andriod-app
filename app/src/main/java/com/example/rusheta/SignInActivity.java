@@ -27,9 +27,9 @@ public class SignInActivity extends AppCompatActivity {
     EditText name;
     EditText phone;
     EditText password;
-    private static final String BASE_URL = "http://10.0.2.2:3000";
+//    private static final String BASE_URL = "http://10.0.2.2:3000";
 //    private static final String BASE_URL = "http://localhost:3000";
-//    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
+    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
 
     Retrofit retrofit = new Retrofit.Builder()
             .baseUrl(BASE_URL)

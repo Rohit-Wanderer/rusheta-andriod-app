@@ -33,6 +33,8 @@ android {
 dependencies {
     def lifecycle_version = "2.2.0"
 
+    //Signal Protocol
+    implementation 'org.whispersystems:signal-protocol-android:2.8.1'
     // ViewModel
     implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
     // LiveData

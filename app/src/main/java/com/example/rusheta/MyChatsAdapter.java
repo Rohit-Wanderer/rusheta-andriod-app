@@ -43,7 +43,7 @@ public class MyChatsAdapter extends RecyclerView.Adapter {
                 Toast.makeText(context, String.valueOf(position), Toast.LENGTH_SHORT).show();
                 String name = chatList.get(position).getName();
                 String number = chatList.get(position).getPhone();
-                long contactId = chatList.get(position).getContactId();
+                String contactId = chatList.get(position).getContactId();
                 Chat chat = new Chat(contactId,number, name);
                 Intent chatIntent = new Intent(context, ChatActivity.class);
                 chatIntent.putExtra("Chat",chat);

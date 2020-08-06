@@ -14,16 +14,17 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
-public class MyContactsAdapter extends RecyclerView.Adapter {
+public class MyContacts2Adapter extends RecyclerView.Adapter {
 
-    private ArrayList<ContactDTO> contactList;
+    private List<Contacts2> contactList;
     private Context context;
 
 
-    MyContactsAdapter(Context context, ArrayList<ContactDTO> contactList){
+    MyContacts2Adapter(Context context, List<Contacts2> contactList){
         this.contactList = contactList;
         this.context = context;
     }
@@ -34,21 +35,21 @@ public class MyContactsAdapter extends RecyclerView.Adapter {
 
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_contact, parent, false);
-        return new MyContactsAdapter.ContactTextHolder(view);
+        return new MyContacts2Adapter.ContactTextHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        ContactDTO contact = (ContactDTO) contactList.get(position);
-        ((MyContactsAdapter.ContactTextHolder) holder).bind(contact);
+        Contacts2 contact = (Contacts2) contactList.get(position);
+        ((MyContacts2Adapter.ContactTextHolder) holder).bind(contact);
 
         ((ContactTextHolder) holder).parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(context, String.valueOf(position), Toast.LENGTH_SHORT).show();
-                String name = contactList.get(position).getDisplayName();
-                String number = contactList.get(position).getPhoneList().get(0).getDataValue();
-                String contactId = String.valueOf(contactList.get(position).getContactId());
+                String name = contactList.get(position).getName();
+                String number = contactList.get(position).getPhone();
+                String contactId = contactList.get(position).getContactId();
                 Chat chat = new Chat(contactId,number, name);
                 Intent returnIntent = new Intent();
                 returnIntent.putExtra("Chat", chat);
@@ -68,8 +69,8 @@ public class MyContactsAdapter extends RecyclerView.Adapter {
             contactText = (TextView) itemView.findViewById(R.id.text_contact_name);
         }
 
-        void bind(ContactDTO contact) {
-            contactText.setText(contact.getDisplayName());
+        void bind(Contacts2 contact) {
+            contactText.setText(contact.getName());
         }
 
     }

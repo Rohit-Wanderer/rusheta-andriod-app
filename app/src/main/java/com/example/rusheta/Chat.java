@@ -10,14 +10,14 @@ public class Chat implements Serializable {
 
     @NonNull
     @PrimaryKey
-    private long contactId;
+    private String contactId;
 
     @NonNull
     private String phone;
     @NonNull
     private String name;
 
-    public Chat(long contactId,String phone, String name) {
+    public Chat(String contactId,String phone, String name) {
         this.phone = phone;
         this.name = name;
         this.contactId = contactId;
@@ -39,11 +39,11 @@ public class Chat implements Serializable {
         this.name = name;
     }
 
-    public long getContactId() {
+    public String getContactId() {
         return contactId;
     }
 
-    public void setContactId(long contactId) {
+    public void setContactId(String contactId) {
         this.contactId = contactId;
     }
 }

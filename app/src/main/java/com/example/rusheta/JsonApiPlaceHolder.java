@@ -1,5 +1,7 @@
 package com.example.rusheta;
 
+import java.util.List;
+
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -25,4 +27,7 @@ public interface JsonApiPlaceHolder {
 
     @POST("/contacts")
     Call<Contacts> getContacts(@Header("Authorization") String authToken, @Body Contacts contacts);
+
+    @POST("/allcontacts")
+    Call<List<Contacts2>> getAllContacts(@Header("Authorization") String authToken);
 }
