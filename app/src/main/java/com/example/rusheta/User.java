@@ -29,9 +29,21 @@ public class User {
     @Expose
     private String secret2;
 
-    @SerializedName("tokens")
+    @SerializedName("identityKey")
     @Expose
-    private List<Token> tokens = null;
+    private String identityKey;
+
+    @SerializedName("ephemeralKey")
+    @Expose
+    private String ephemeralKey;
+
+    @SerializedName("signature")
+    @Expose
+    private String signature;
+
+    @SerializedName("token")
+    @Expose
+    private String token = null;
 
     public String getSecret1() {
         return secret1;
@@ -61,12 +73,12 @@ public class User {
         this.password = password;
     }
 
-    public List<Token> getTokens() {
-        return tokens;
+    public String getToken() {
+        return token;
     }
 
-    public void setTokens(List<Token> tokens) {
-        this.tokens = tokens;
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public String getName() {
@@ -81,11 +93,38 @@ public class User {
         return password;
     }
 
-    public User(String name, String phone, String password, String secret1, String secret2) {
+    public String getIdentityKey() {
+        return identityKey;
+    }
+
+    public void setIdentityKey(String identityKey) {
+        this.identityKey = identityKey;
+    }
+
+    public String getEphemeralKey() {
+        return ephemeralKey;
+    }
+
+    public void setEphemeralKey(String ephemeralKey) {
+        this.ephemeralKey = ephemeralKey;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+
+    public User(String name, String phone, String password, String secret1, String secret2, String identityKey, String ephemeralKey, String signature) {
         this.name = name;
         this.phone = phone;
         this.password = password;
         this.secret1 = secret1;
         this.secret2 = secret2;
+        this.identityKey = identityKey;
+        this.ephemeralKey = ephemeralKey;
+        this.signature = signature;
     }
 }

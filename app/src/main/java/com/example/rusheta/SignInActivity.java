@@ -15,6 +15,9 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 
+import java.io.UnsupportedEncodingException;
+import java.security.Security;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -27,9 +30,11 @@ public class SignInActivity extends AppCompatActivity {
     EditText name;
     EditText phone;
     EditText password;
-//    private static final String BASE_URL = "http://10.0.2.2:3000";
+
+    SignalProtocolKeyGen signalProtocol;
+        private static final String BASE_URL = "http://10.0.2.2:3000";
 //    private static final String BASE_URL = "http://localhost:3000";
-    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
+//    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
 
     Retrofit retrofit = new Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -53,17 +58,17 @@ public class SignInActivity extends AppCompatActivity {
         phone = findViewById(R.id.edittext_phone);
         password = findViewById(R.id.edittext_password);
 
-        String phoneNumber = phone.getText().toString();
         if(!name.getText().toString().isEmpty()&&!phone.getText().toString().isEmpty()&&!password.getText().toString().isEmpty()) {
 
             PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
-            phoneNumber = phone.getText().toString();
+            String phoneNumber = phone.getText().toString();
             try {
                 Phonenumber.PhoneNumber phoneNumberProto = phoneUtil.parse(phoneNumber, "IN");
                 phoneNumber = phoneUtil.format(phoneNumberProto, PhoneNumberUtil.PhoneNumberFormat.E164);
                 Log.i("PHONE NUMBERS SIGN IN",phoneNumber);
             } catch (NumberParseException e) {
                 e.printStackTrace();
+                return;
             }
             createUser(phoneNumber,name.getText().toString(),password.getText().toString());
         }else
@@ -74,19 +79,16 @@ public class SignInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Security.addProvider(new org.spongycastle.jce.provider.BouncyCastleProvider());
         SharedPreferences sharedPreferences
                 = getSharedPreferences("RushetaData",
                 MODE_PRIVATE);
 
-//        sharedPreferences.edit().clear().commit();
+        sharedPreferences.edit().clear().commit();
+        signalProtocol = new SignalProtocolKeyGen(sharedPreferences);
 
         if(!sharedPreferences.getString("token","").isEmpty()){
-            Intent i  = new Intent(SignInActivity.this, MainActivity.class);
-            i.putExtra(NICKNAME,sharedPreferences.getString("name",""));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
-            SignInActivity.this.finish();
+            SignIn();
         }
 
         setContentView(R.layout.signin_screen);
@@ -108,9 +110,31 @@ public class SignInActivity extends AppCompatActivity {
 
             String Password = new String(Base64.encode(cryptoClass.encrypt(password.getBytes()), Base64.DEFAULT));
 
+
+            String identityKeyString = ObjectSerializationClass.getStringFromObject(
+                    signalProtocol.identityKeyPair.kp.getPublic()
+            );
+            String identityKey = new String(Base64.encode(
+                    cryptoClass.encrypt(
+                            identityKeyString.getBytes()),
+                    Base64.DEFAULT));
+
+            String ephemeralKeyString = ObjectSerializationClass.getStringFromObject(
+                    signalProtocol.identityKeyPair.kp.getPublic()
+            );
+            String ephemeralKey = new String(Base64.encode(
+                    cryptoClass.encrypt(
+                            ephemeralKeyString.getBytes()),
+                    Base64.DEFAULT));
+
+            String signature = new String(Base64.encode(
+                    cryptoClass.encrypt(
+                    signalProtocol.signKey(signalProtocol.ephemeralKeyPair.kp.getPublic()).getBytes()),
+                    Base64.DEFAULT));
+
             ///Double Encryption logic.
 
-            User user = new User(Name,Phone,Password,secret1,secret2);
+            User user = new User(Name,Phone,Password,secret1,secret2,identityKey,ephemeralKey,signature);
             Call<User> call = jsonApiPlaceHolder.createUser(user);
             call.enqueue(new Callback<User>() {
                 @Override
@@ -129,10 +153,10 @@ public class SignInActivity extends AppCompatActivity {
 
                     myEdit.putString(
                             "name",
-                            response.body().getName());
+                            name);
                     myEdit.putString(
                             "phone",
-                            response.body().getPhone());
+                            phone);
                     myEdit.putString(
                             "secret1",
                             new String(Base64.encode(cryptoClass.getKey(), Base64.DEFAULT)));
@@ -140,13 +164,17 @@ public class SignInActivity extends AppCompatActivity {
                             "secret2",
                             new String(Base64.encode(cryptoClass.getIV(), Base64.DEFAULT)));
 
-                    Log.i("user",response.body().getName());
-                    myEdit.putString("token",response.body().getTokens().get(0).getToken());
-                    Log.i("user",response.body().getTokens().get(0).getToken());
+                    try {
+                        String Token = new String(
+                                cryptoClass.decrypt(Base64.decode(response.body().getToken(), Base64.DEFAULT)),
+                                "UTF-8");
 
-                    myEdit.commit();
-
-                    SignIn();
+                        myEdit.putString("token",Token);
+                        myEdit.commit();
+                        SignIn();
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 @Override

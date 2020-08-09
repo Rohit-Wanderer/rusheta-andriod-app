@@ -89,14 +89,14 @@ public class CryptoClass {
         return null;
     }
 
-    public  String decrypt(byte[]  cipherText){
+    public  byte[] decrypt(byte[]  cipherText){
         try {
-            Cipher cipher = Cipher.getInstance("AES");
-            SecretKeySpec keySpec = new SecretKeySpec(key, "AES/CBC/PKCS5Padding");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
             IvParameterSpec ivSpec = new IvParameterSpec(IV);
             cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
             byte[] decryptedText = cipher.doFinal(cipherText);
-            return new String(decryptedText);
+            return decryptedText;
         } catch (Exception e) {
             e.printStackTrace();
         }
