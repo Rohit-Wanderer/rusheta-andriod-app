@@ -16,11 +16,14 @@ public class Chat implements Serializable {
     private String phone;
     @NonNull
     private String name;
+    @NonNull
+    private  String AESKey;
 
-    public Chat(String contactId,String phone, String name) {
+    public Chat(@NonNull String contactId, @NonNull String phone, @NonNull String name,@NonNull String AESKey) {
+        this.contactId = contactId;
         this.phone = phone;
         this.name = name;
-        this.contactId = contactId;
+        this.AESKey = AESKey;
     }
 
     public String getName() {
@@ -45,5 +48,14 @@ public class Chat implements Serializable {
 
     public void setContactId(String contactId) {
         this.contactId = contactId;
+    }
+
+    @NonNull
+    public String getAESKey() {
+        return AESKey;
+    }
+
+    public void setAESKey(@NonNull String AESKey) {
+        this.AESKey = AESKey;
     }
 }

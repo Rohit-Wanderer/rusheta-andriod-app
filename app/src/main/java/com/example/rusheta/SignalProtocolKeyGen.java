@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -42,25 +43,29 @@ public class SignalProtocolKeyGen {
 
     }
 
-    Boolean verifyKey(PublicKey publicKey, String signatureString) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        byte[] signature = Base64.decode(signatureString, Base64.DEFAULT);
-        String data = new String(Base64.encode(publicKey.getEncoded(),Base64.DEFAULT));
+    Boolean verifyKey(PublicKey identityPublicKey, PublicKey ephemeralPublicKey, String signatureString) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        byte[] signature = Base64.decode(signatureString, Base64.NO_WRAP | Base64.URL_SAFE);
+        String data = new String(Base64.encode(ephemeralPublicKey.getEncoded(), Base64.DEFAULT));
         Signature s = Signature.getInstance("SHA256withECDSA","SC");
-        s.initVerify(identityKeyPair.kp.getPublic());
+        s.initVerify(identityPublicKey);
         s.update(data.getBytes());
         boolean valid = s.verify(signature);
         if(valid)
             Log.i("VAILD","True");
+        else
+            Log.i("VAILD", "False");
         return valid;
     }
 
-    String signKey(PublicKey publicKey) throws InvalidKeyException, SignatureException, NoSuchProviderException, NoSuchAlgorithmException {
+    String signKey(PublicKey publicKey) throws InvalidKeyException, SignatureException, NoSuchProviderException, NoSuchAlgorithmException, UnsupportedEncodingException {
         String data = new String(Base64.encode(publicKey.getEncoded(),Base64.DEFAULT));
         Signature s = Signature.getInstance("SHA256withECDSA","SC");
         s.initSign(identityKeyPair.kp.getPrivate());
         s.update(data.getBytes());
         byte[] signature = s.sign();
-        return new String(Base64.encode(signature,Base64.DEFAULT));
+        String ret = Base64.encodeToString(signature, Base64.NO_WRAP | Base64.URL_SAFE);
+        Log.i("Signature", ret);
+        return ret;
     }
 
     byte[] generateSecret(PrivateKey privateKey, PublicKey publicKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException {
@@ -84,6 +89,21 @@ public class SignalProtocolKeyGen {
         byte[] secret = hkdFv2.deriveSecrets(DH,"wabalabadubdub".getBytes(),DH1.length);
         return secret;
     }
+
+    byte[] genAESKey(PublicKey identityKeyPairReceived, PublicKey ephemeralKeyPairReceived) throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException {
+        byte[] DH1 = generateSecret(ephemeralKeyPair.kp.getPrivate(), identityKeyPairReceived);
+        byte[] DH2 = generateSecret(identityKeyPair.kp.getPrivate(), ephemeralKeyPairReceived);
+        byte[] DH3 = generateSecret(ephemeralKeyPair.kp.getPrivate(), ephemeralKeyPairReceived);
+        ByteArrayOutputStream my_stream = new ByteArrayOutputStream();
+        my_stream.write(DH1);
+        my_stream.write(DH2);
+        my_stream.write(DH3);
+        byte[] DH = my_stream.toByteArray();
+        HKDFv2 hkdFv2 = new HKDFv2();
+        byte[] secret = hkdFv2.deriveSecrets(DH, "wabalabadubdub".getBytes(), DH1.length);
+        return secret;
+    }
+
 
 
 }

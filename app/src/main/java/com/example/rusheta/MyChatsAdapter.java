@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
@@ -44,7 +45,8 @@ public class MyChatsAdapter extends RecyclerView.Adapter {
                 String name = chatList.get(position).getName();
                 String number = chatList.get(position).getPhone();
                 String contactId = chatList.get(position).getContactId();
-                Chat chat = new Chat(contactId,number, name);
+                String AESKey = chatList.get(position).getAESKey();
+                Chat chat = new Chat(contactId, number, name, AESKey);
                 Intent chatIntent = new Intent(context, ChatActivity.class);
                 chatIntent.putExtra("Chat",chat);
                 ((Activity) context).startActivityForResult(chatIntent,2);

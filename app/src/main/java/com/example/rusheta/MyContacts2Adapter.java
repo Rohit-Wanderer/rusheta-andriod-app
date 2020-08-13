@@ -3,6 +3,8 @@ package com.example.rusheta;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +15,12 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.SignatureException;
 import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
@@ -22,11 +29,12 @@ public class MyContacts2Adapter extends RecyclerView.Adapter {
 
     private List<Contacts2> contactList;
     private Context context;
+    SignalProtocolKeyGen signalProtocolKeyGen;
 
-
-    MyContacts2Adapter(Context context, List<Contacts2> contactList){
+    MyContacts2Adapter(Context context, List<Contacts2> contactList, SignalProtocolKeyGen signalProtocolKeyGen) {
         this.contactList = contactList;
         this.context = context;
+        this.signalProtocolKeyGen = signalProtocolKeyGen;
     }
 
     @NonNull
@@ -40,7 +48,7 @@ public class MyContacts2Adapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Contacts2 contact = (Contacts2) contactList.get(position);
+        Contacts2 contact = contactList.get(position);
         ((MyContacts2Adapter.ContactTextHolder) holder).bind(contact);
 
         ((ContactTextHolder) holder).parentLayout.setOnClickListener(new View.OnClickListener() {
@@ -50,11 +58,42 @@ public class MyContacts2Adapter extends RecyclerView.Adapter {
                 String name = contactList.get(position).getName();
                 String number = contactList.get(position).getPhone();
                 String contactId = contactList.get(position).getContactId();
-                Chat chat = new Chat(contactId,number, name);
-                Intent returnIntent = new Intent();
-                returnIntent.putExtra("Chat", chat);
-                ((Activity) context).setResult(RESULT_OK,returnIntent);
-                ((Activity) context).finish();
+                String identityKey = contactList.get(position).getIdentityKey();
+                String ephemeralKey = contactList.get(position).getEphemeralKey();
+                String signature = contactList.get(position).getSignature();
+
+                try {
+                    PublicKey identityKeyPublicKey = (PublicKey) ObjectSerializationClass.getObjectFromString(identityKey);
+                    PublicKey ephemeralKeyPublicKey = (PublicKey) ObjectSerializationClass.getObjectFromString(ephemeralKey);
+
+                    Log.i("ServerSignature", signature);
+                    Log.i("ServerSignature", identityKeyPublicKey.toString());
+                    Log.i("ServerSignature", ephemeralKeyPublicKey.toString());
+                    if (signalProtocolKeyGen.verifyKey(identityKeyPublicKey, ephemeralKeyPublicKey, signature)) {
+                        byte[] AESKey = signalProtocolKeyGen.getAESKey(identityKeyPublicKey, ephemeralKeyPublicKey);
+                        String AESKeyString = new String(Base64.encode(AESKey, Base64.DEFAULT));
+                        Log.i("AESKeyString::::::::::::::::::::::", AESKeyString);
+                        Chat chat = new Chat(contactId, number, name, AESKeyString);
+                        Intent returnIntent = new Intent();
+                        returnIntent.putExtra("Chat", chat);
+                        ((Activity) context).setResult(RESULT_OK, returnIntent);
+                        ((Activity) context).finish();
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (InvalidKeyException e) {
+                    e.printStackTrace();
+                } catch (SignatureException e) {
+                    e.printStackTrace();
+                } catch (NoSuchProviderException e) {
+                    e.printStackTrace();
+                }
+
             }
         });
     }

@@ -3,7 +3,6 @@ package com.example.rusheta;
 import android.content.SharedPreferences;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
-import android.util.Log;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,7 +37,7 @@ public class IdentityKeyPair {
             b.close();
             String Key = new String(Base64.encode(res, Base64.DEFAULT));
             myEdit.putString("identityKeyPair", Key);
-            myEdit.commit();
+            myEdit.apply();
             return;
         }
 

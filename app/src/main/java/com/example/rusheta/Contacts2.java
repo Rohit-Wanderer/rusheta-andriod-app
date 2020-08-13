@@ -3,8 +3,6 @@ package com.example.rusheta;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
-
 public class Contacts2 {
 
     @SerializedName("name")
@@ -19,6 +17,18 @@ public class Contacts2 {
     @Expose
     private String contactId;
 
+    @SerializedName("identityKey")
+    @Expose
+    private String identityKey;
+
+    @SerializedName("ephemeralKey")
+    @Expose
+    private String ephemeralKey;
+
+    @SerializedName("signature")
+    @Expose
+    private String signature;
+
     public String getContactId() {
         return contactId;
     }
@@ -27,9 +37,37 @@ public class Contacts2 {
         this.contactId = contactId;
     }
 
-    public Contacts2(String name, String phone) {
+    public String getIdentityKey() {
+        return identityKey;
+    }
+
+    public void setIdentityKey(String identityKey) {
+        this.identityKey = identityKey;
+    }
+
+    public String getEphemeralKey() {
+        return ephemeralKey;
+    }
+
+    public void setEphemeralKey(String ephemeralKey) {
+        this.ephemeralKey = ephemeralKey;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+
+    public Contacts2(String name, String phone, String contactId, String identityKey, String ephemeralKey, String signature) {
         this.name = name;
         this.phone = phone;
+        this.contactId = contactId;
+        this.identityKey = identityKey;
+        this.ephemeralKey = ephemeralKey;
+        this.signature = signature;
     }
 
     public String getName() {

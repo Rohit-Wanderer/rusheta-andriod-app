@@ -18,12 +18,14 @@ public interface JsonApiPlaceHolder {
     Call<User> createUser(@Body User user);
 
     @Multipart
-    @POST ("/images/upload")
-    Call<Response>
-    uploadImage(@Header("Authorization") String authToken, @Part MultipartBody.Part image);
+    @POST("/images/upload")
+    Call<Response> uploadImage(@Header("Authorization") String authToken, @Part MultipartBody.Part image);
 
     @POST("/image/download")
-    Call<ResponseBody> getImage(@Header("Authorization") String authToken,@Body ImagePath path);
+    Call<ResponseBody> getImage(@Header("Authorization") String authToken, @Body ImagePath path);
+
+    @POST("/image/delete")
+    Call<ResponseBody> deleteImage(@Header("Authorization") String authToken, @Body ImagePath path);
 
     @POST("/contacts")
     Call<Contacts> getContacts(@Header("Authorization") String authToken, @Body Contacts contacts);

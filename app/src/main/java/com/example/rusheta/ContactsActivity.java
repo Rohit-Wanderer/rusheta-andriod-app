@@ -1,12 +1,5 @@
 package com.example.rusheta;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.SharedPreferences;
@@ -20,6 +13,13 @@ import android.provider.ContactsContract;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -127,7 +127,7 @@ public class ContactsActivity extends AppCompatActivity {
 
                     @Override
                     public void onFailure(Call<Contacts> call, Throwable t) {
-
+                        t.printStackTrace();
                     }
                 });
             } catch (Exception e) {

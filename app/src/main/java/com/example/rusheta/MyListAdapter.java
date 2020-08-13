@@ -1,6 +1,6 @@
 package com.example.rusheta;
-import android.content.Context;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,13 +40,7 @@ public class MyListAdapter extends RecyclerView.Adapter{
         UserMessage message = (UserMessage) messageList.get(position);
 
             return message.getMsgType();
-//        if (message.getSender().getUserId().equals(SendBird.getCurrentUser().getUserId())) {
-//            // If the current user is the sender of the message
-//            return VIEW_TYPE_MESSAGE_SENT;
-//        } else {
-//            // If some other user sent the message
-//            return VIEW_TYPE_MESSAGE_RECEIVED;
-//        }
+
     }
 
     // Inflates the appropriate layout according to the ViewType.
@@ -183,9 +177,6 @@ public class MyListAdapter extends RecyclerView.Adapter{
             SimpleDateFormat formatter= new SimpleDateFormat("HH:mm:ss");
             timeText.setText(formatter.format(message.getTimeReceived()));
             nameText.setText(message.getMsgSender());
-
-            // Insert the profile image from the URL into the ImageView.
-            //   Utils.displayRoundImageFromUrl(mContext, message.getSender().getProfileUrl(), profileImage);
         }
     }
 

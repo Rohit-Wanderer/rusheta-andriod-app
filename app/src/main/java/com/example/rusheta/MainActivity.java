@@ -3,7 +3,12 @@ package com.example.rusheta;
 
 import android.content.Intent;
 import android.os.Bundle;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.WindowManager;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,10 +16,9 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.widget.Toast;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import java.util.ArrayList;
 
 
@@ -28,12 +32,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.main_menu,menu);
+        menuInflater.inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item){
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         chatViewModel.deleteAll();
         return super.onOptionsItemSelected(item);
     }
@@ -42,20 +46,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         recyclerView = findViewById(R.id.chatRecyclerView);
         LinearLayoutManager myLinearLayoutManager = new LinearLayoutManager(MainActivity.this);
         recyclerView.setLayoutManager(myLinearLayoutManager);
-        contacts = new ArrayList<Chat>();
+        contacts = new ArrayList<>();
 
         //Set View Model
         chatViewModel = new ViewModelProvider(this).get(ChatViewModel.class);
         chatViewModel.getAllChats().observe(this, chats -> {
             contacts = (ArrayList<Chat>) chats;
-            myChatsAdapter = new MyChatsAdapter(MainActivity.this,contacts);
+            myChatsAdapter = new MyChatsAdapter(MainActivity.this, contacts);
             recyclerView.setAdapter(myChatsAdapter);
         });
 
-        myChatsAdapter = new MyChatsAdapter(MainActivity.this,contacts);
+        myChatsAdapter = new MyChatsAdapter(MainActivity.this, contacts);
         recyclerView.setAdapter(myChatsAdapter);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -63,8 +68,8 @@ public class MainActivity extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
-            Intent i  = new Intent(MainActivity.this, Contacts2Activity.class);
-            startActivityForResult(i,1);
+            Intent i = new Intent(MainActivity.this, Contacts2Activity.class);
+            startActivityForResult(i, 1);
         });
     }
 
@@ -72,16 +77,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == 1 && resultCode == RESULT_OK && data != null ){
+        if (requestCode == 1 && resultCode == RESULT_OK && data != null) {
             try {
                 Chat chat = (Chat) data.getSerializableExtra("Chat");
                 chatViewModel.insert(chat);
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-        }else if(requestCode == 2 && resultCode == RESULT_OK && data != null){
+        } else if (requestCode == 2 && resultCode == RESULT_OK && data != null) {
 
-        }else
+        } else
             Toast.makeText(this, "Please select Contact", Toast.LENGTH_SHORT).show();
     }
 }

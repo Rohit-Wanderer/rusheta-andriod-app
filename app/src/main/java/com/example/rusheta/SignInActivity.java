@@ -32,9 +32,9 @@ public class SignInActivity extends AppCompatActivity {
     EditText password;
 
     SignalProtocolKeyGen signalProtocol;
-        private static final String BASE_URL = "http://10.0.2.2:3000";
+    //            private static final String BASE_URL = "http://10.0.2.2:3000";
 //    private static final String BASE_URL = "http://localhost:3000";
-//    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
+    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
 
     Retrofit retrofit = new Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -43,35 +43,33 @@ public class SignInActivity extends AppCompatActivity {
     JsonApiPlaceHolder jsonApiPlaceHolder = retrofit.create(JsonApiPlaceHolder.class);
 
 
-
-    public void SignIn(){
-        Intent i  = new Intent(SignInActivity.this, MainActivity.class);
-        i.putExtra(NICKNAME,name.getText().toString());
+    public void SignIn() {
+        Intent i = new Intent(SignInActivity.this, MainActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(i);
         SignInActivity.this.finish();
     }
 
-    public void onSignIn(View view){
+    public void onSignIn(View view) {
 
         name = findViewById(R.id.edittext_name);
         phone = findViewById(R.id.edittext_phone);
         password = findViewById(R.id.edittext_password);
 
-        if(!name.getText().toString().isEmpty()&&!phone.getText().toString().isEmpty()&&!password.getText().toString().isEmpty()) {
+        if (!name.getText().toString().isEmpty() && !phone.getText().toString().isEmpty() && !password.getText().toString().isEmpty()) {
 
             PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
             String phoneNumber = phone.getText().toString();
             try {
                 Phonenumber.PhoneNumber phoneNumberProto = phoneUtil.parse(phoneNumber, "IN");
                 phoneNumber = phoneUtil.format(phoneNumberProto, PhoneNumberUtil.PhoneNumberFormat.E164);
-                Log.i("PHONE NUMBERS SIGN IN",phoneNumber);
+                Log.i("PHONE NUMBERS SIGN IN", phoneNumber);
             } catch (NumberParseException e) {
                 e.printStackTrace();
                 return;
             }
-            createUser(phoneNumber,name.getText().toString(),password.getText().toString());
-        }else
+            createUser(phoneNumber, name.getText().toString(), password.getText().toString());
+        } else
             Toast.makeText(this, "Enter Valid Details", Toast.LENGTH_SHORT).show();
 
     }
@@ -84,10 +82,10 @@ public class SignInActivity extends AppCompatActivity {
                 = getSharedPreferences("RushetaData",
                 MODE_PRIVATE);
 
-        sharedPreferences.edit().clear().commit();
+//        sharedPreferences.edit().clear().commit();
         signalProtocol = new SignalProtocolKeyGen(sharedPreferences);
 
-        if(!sharedPreferences.getString("token","").isEmpty()){
+        if (!sharedPreferences.getString("token", "").isEmpty()) {
             SignIn();
         }
 
@@ -95,7 +93,7 @@ public class SignInActivity extends AppCompatActivity {
 
     }
 
-    private void createUser(String phone,String name,String password){
+    private void createUser(String phone, String name, String password) {
 
         try {
             CryptoClass cryptoClass = new CryptoClass();
@@ -120,7 +118,7 @@ public class SignInActivity extends AppCompatActivity {
                     Base64.DEFAULT));
 
             String ephemeralKeyString = ObjectSerializationClass.getStringFromObject(
-                    signalProtocol.identityKeyPair.kp.getPublic()
+                    signalProtocol.ephemeralKeyPair.kp.getPublic()
             );
             String ephemeralKey = new String(Base64.encode(
                     cryptoClass.encrypt(
@@ -129,18 +127,18 @@ public class SignInActivity extends AppCompatActivity {
 
             String signature = new String(Base64.encode(
                     cryptoClass.encrypt(
-                    signalProtocol.signKey(signalProtocol.ephemeralKeyPair.kp.getPublic()).getBytes()),
+                            signalProtocol.signKey(signalProtocol.ephemeralKeyPair.kp.getPublic()).getBytes()),
                     Base64.DEFAULT));
 
             ///Double Encryption logic.
 
-            User user = new User(Name,Phone,Password,secret1,secret2,identityKey,ephemeralKey,signature);
+            User user = new User(Name, Phone, Password, secret1, secret2, identityKey, ephemeralKey, signature);
             Call<User> call = jsonApiPlaceHolder.createUser(user);
             call.enqueue(new Callback<User>() {
                 @Override
                 public void onResponse(Call<User> call, Response<User> response) {
-                    if(!response.isSuccessful()){
-                        Log.i("createUserLogNoSuccess",""+response.code());
+                    if (!response.isSuccessful()) {
+                        Log.i("createUserLogNoSuccess", "" + response.code());
                         return;
                     }
 
@@ -169,8 +167,8 @@ public class SignInActivity extends AppCompatActivity {
                                 cryptoClass.decrypt(Base64.decode(response.body().getToken(), Base64.DEFAULT)),
                                 "UTF-8");
 
-                        myEdit.putString("token",Token);
-                        myEdit.commit();
+                        myEdit.putString("token", Token);
+                        myEdit.apply();
                         SignIn();
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
@@ -179,7 +177,7 @@ public class SignInActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call<User> call, Throwable t) {
-                    Log.i("createUserLogFail",t.toString());
+                    Log.i("createUserLogFail", t.toString());
                 }
             });
         } catch (Exception e) {

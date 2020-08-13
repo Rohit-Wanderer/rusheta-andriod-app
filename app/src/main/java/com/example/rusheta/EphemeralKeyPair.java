@@ -37,7 +37,7 @@ public class EphemeralKeyPair {
             b.close();
             String Key = new String(Base64.encode(res, Base64.DEFAULT));
             myEdit.putString("ephemeralKeyPair", Key);
-            myEdit.commit();
+            myEdit.apply();
             return;
         }
 

@@ -49,7 +49,8 @@ public class MyContactsAdapter extends RecyclerView.Adapter {
                 String name = contactList.get(position).getDisplayName();
                 String number = contactList.get(position).getPhoneList().get(0).getDataValue();
                 String contactId = String.valueOf(contactList.get(position).getContactId());
-                Chat chat = new Chat(contactId,number, name);
+                String AESKey = "Dummy value";
+                Chat chat = new Chat(contactId, number, name, AESKey);
                 Intent returnIntent = new Intent();
                 returnIntent.putExtra("Chat", chat);
                 ((Activity) context).setResult(RESULT_OK,returnIntent);

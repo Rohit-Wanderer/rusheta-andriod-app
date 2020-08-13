@@ -1,32 +1,15 @@
 package com.example.rusheta;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.Manifest;
-import android.content.ContentResolver;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import retrofit2.Call;
@@ -37,9 +20,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Contacts2Activity extends AppCompatActivity {
     private static final String TAG = "Contacts2Activity";
-    private static final String BASE_URL = "http://10.0.2.2:3000";
+    //        private static final String BASE_URL = "http://10.0.2.2:3000";
 //    private static final String BASE_URL = "http://localhost:3000";
-//    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
+    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
 
     Retrofit retrofit = new Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -50,13 +33,12 @@ public class Contacts2Activity extends AppCompatActivity {
     RecyclerView recyclerView;
     MyContacts2Adapter myContacts2Adapter;
     List<Contacts2> contacts;
+    SignalProtocolKeyGen signalProtocol;
+
 
     private static final String TAG_ANDROID_CONTACTS = "ANDROID_CONTACTS2";
 
-    private void getAllContacts() {
-        SharedPreferences sharedPreferences
-                = getSharedPreferences("RushetaData",
-                MODE_PRIVATE);
+    private void getAllContacts(SharedPreferences sharedPreferences) {
         try{
 
             String token = sharedPreferences.getString("token","");
@@ -77,7 +59,7 @@ public class Contacts2Activity extends AppCompatActivity {
                         Log.i("Valid Contacts2", validContacts.get(0).getName());
                         contacts = validContacts;
                         Log.i("CONTACTS SIZE::", String.valueOf(contacts.size()));
-                        myContacts2Adapter = new MyContacts2Adapter(Contacts2Activity.this,contacts);
+                        myContacts2Adapter = new MyContacts2Adapter(Contacts2Activity.this, contacts, signalProtocol);
                         recyclerView.setAdapter(myContacts2Adapter);
 
                     }catch (Exception e){
@@ -101,13 +83,18 @@ public class Contacts2Activity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contacts);
+        SharedPreferences sharedPreferences
+                = getSharedPreferences("RushetaData",
+                MODE_PRIVATE);
+
+        signalProtocol = new SignalProtocolKeyGen(sharedPreferences);
         contacts = new ArrayList<Contacts2>();
         recyclerView = findViewById(R.id.contactsRecyclerView);
         LinearLayoutManager myLinearLayoutManager = new LinearLayoutManager(Contacts2Activity.this);
         recyclerView.setLayoutManager(myLinearLayoutManager);
-        myContacts2Adapter = new MyContacts2Adapter(Contacts2Activity.this, contacts);
+        myContacts2Adapter = new MyContacts2Adapter(Contacts2Activity.this, contacts, signalProtocol);
         recyclerView.setAdapter(myContacts2Adapter);
-        getAllContacts();
+        getAllContacts(sharedPreferences);
         Toast.makeText(Contacts2Activity.this, "Contact data has been printed in the android monitor log..", Toast.LENGTH_SHORT).show();
 
     }
