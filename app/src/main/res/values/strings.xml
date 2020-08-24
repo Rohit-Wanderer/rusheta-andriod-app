@@ -14,4 +14,11 @@
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="share_image">Share Image</string>
     <string name="clear_chats">Clear Chats</string>
+    <string name="rusheta">Rusheta</string>
+    <string name="enter_phone">Enter Phone</string>
+    <string name="enter_name">Enter Name</string>
+    <string name="enter_password">Enter Password</string>
+    <string name="sign_in">Sign In</string>
+    <string name="enter_message">Enter message</string>
+    <string name="send">SEND</string>
 </resources>

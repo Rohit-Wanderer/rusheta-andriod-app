@@ -14,10 +14,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".ContactsActivity"></activity>
-        <activity android:name=".Contacts2Activity"></activity>
+        <activity android:name=".view.ui.ContactsActivity"/>
+        <activity android:name=".view.ui.Contacts2Activity"/>
         <activity
-            android:name=".MainActivity"
+            android:name=".view.ui.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -25,10 +25,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ChatActivity"
-            android:label="@string/app_name"></activity>
+            android:name=".view.ui.ChatActivity"
+            android:label="@string/app_name"/>
         <activity
-            android:name=".SignInActivity"
+            android:name=".view.ui.SignInActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
