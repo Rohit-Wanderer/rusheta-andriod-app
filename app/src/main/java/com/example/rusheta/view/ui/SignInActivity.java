@@ -11,25 +11,23 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.rusheta.service.remote.JsonApiPlaceHolder;
 import com.example.rusheta.R;
 import com.example.rusheta.service.model.User;
-import com.example.rusheta.utils.ObjectSerializationClass;
+import com.example.rusheta.service.remote.JsonApiPlaceHolder;
+import com.example.rusheta.service.remote.RetrofitService;
 import com.example.rusheta.utils.CryptoClass;
+import com.example.rusheta.utils.ObjectSerializationClass;
 import com.example.rusheta.utils.signal.SignalProtocolKeyGen;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class SignInActivity extends AppCompatActivity {
 
@@ -39,16 +37,6 @@ public class SignInActivity extends AppCompatActivity {
     EditText password;
 
     SignalProtocolKeyGen signalProtocol;
-//                private static final String BASE_URL = "http://10.0.2.2:3000";
-//    private static final String BASE_URL = "http://localhost:3000";
-    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
-
-    Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
-    JsonApiPlaceHolder jsonApiPlaceHolder = retrofit.create(JsonApiPlaceHolder.class);
-
 
     public void SignIn() {
         Intent i = new Intent(SignInActivity.this, MainActivity.class);
@@ -106,15 +94,11 @@ public class SignInActivity extends AppCompatActivity {
             CryptoClass cryptoClass = new CryptoClass();
 
             String secret1 = cryptoClass.encryptToRSAString(CryptoClass.getKey());
-
             String secret2 = cryptoClass.encryptToRSAString(CryptoClass.getIV());
 
             String Phone = new String(Base64.encode(cryptoClass.encrypt(phone.getBytes()), Base64.DEFAULT));
-
             String Name = new String(Base64.encode(cryptoClass.encrypt(name.getBytes()), Base64.DEFAULT));
-
             String Password = new String(Base64.encode(cryptoClass.encrypt(password.getBytes()), Base64.DEFAULT));
-
 
             String identityKeyString = ObjectSerializationClass.getStringFromObject(
                     signalProtocol.getIdentityKeyPair().getKp().getPublic()
@@ -140,7 +124,7 @@ public class SignInActivity extends AppCompatActivity {
             ///Double Encryption logic.
 
             User user = new User(Name, Phone, Password, secret1, secret2, identityKey, ephemeralKey, signature);
-            Call<User> call = jsonApiPlaceHolder.createUser(user);
+            Call<User> call = RetrofitService.getInterface().createUser(user);
             call.enqueue(new Callback<User>() {
                 @Override
                 public void onResponse(Call<User> call, Response<User> response) {
