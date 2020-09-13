@@ -71,7 +71,7 @@ import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ChatActivity extends AppCompatActivity {
+public class ActiveChatActivity extends AppCompatActivity {
 
     private static final int VIEW_TYPE_TEXT_SENT = 1;
     private static final int VIEW_TYPE_TEXT_RECEIVED = 2;

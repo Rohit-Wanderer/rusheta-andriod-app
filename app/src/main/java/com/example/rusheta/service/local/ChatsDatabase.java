@@ -7,7 +7,6 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
 import com.example.rusheta.service.model.Chat;
-import com.example.rusheta.service.model.ChatDao;
 
 @Database(entities = Chat.class,version = 4, exportSchema = false)
 public abstract class ChatsDatabase extends RoomDatabase {

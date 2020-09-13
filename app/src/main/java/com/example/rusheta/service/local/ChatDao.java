@@ -1,4 +1,4 @@
-package com.example.rusheta.service.model;
+package com.example.rusheta.service.local;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
@@ -6,6 +6,8 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+
+import com.example.rusheta.service.model.Chat;
 
 import java.util.List;
 

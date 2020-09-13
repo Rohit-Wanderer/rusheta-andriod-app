@@ -6,7 +6,7 @@ import android.os.AsyncTask;
 import androidx.lifecycle.LiveData;
 
 import com.example.rusheta.service.model.Chat;
-import com.example.rusheta.service.model.ChatDao;
+import com.example.rusheta.service.local.ChatDao;
 import com.example.rusheta.service.local.ChatsDatabase;
 
 import java.util.List;

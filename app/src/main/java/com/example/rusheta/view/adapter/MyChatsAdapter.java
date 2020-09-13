@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.rusheta.view.ui.ChatActivity;
+import com.example.rusheta.view.ui.ActiveChatActivity;
 import com.example.rusheta.R;
 import com.example.rusheta.service.model.Chat;
 
@@ -49,7 +49,7 @@ public class MyChatsAdapter extends RecyclerView.Adapter {
             String contactId = chatList.get(position).getContactId();
             String AESKey = chatList.get(position).getAESKey();
             Chat chat = new Chat(contactId, number, name, AESKey);
-            Intent chatIntent = new Intent(context, ChatActivity.class);
+            Intent chatIntent = new Intent(context, ActiveChatActivity.class);
             chatIntent.putExtra("Chat",chat);
             ((Activity) context).startActivityForResult(chatIntent,2);
         });

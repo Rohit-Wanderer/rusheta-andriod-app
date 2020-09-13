@@ -32,9 +32,9 @@ public class Contacts2Activity extends AppCompatActivity {
         setContentView(R.layout.activity_contacts);
         recyclerView = findViewById(R.id.contactsRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(Contacts2Activity.this));
+
         SharedPreferences sharedPreferences
-                = getSharedPreferences("RushetaData",
-                MODE_PRIVATE);
+                = getSharedPreferences("RushetaData", MODE_PRIVATE);
         signalProtocol = new SignalProtocolKeyGen(sharedPreferences);
         contacts = new ArrayList<>();
 

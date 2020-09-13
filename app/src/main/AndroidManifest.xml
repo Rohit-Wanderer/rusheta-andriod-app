@@ -25,7 +25,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".view.ui.ChatActivity"
+            android:name=".view.ui.ActiveChatActivity"
             android:label="@string/app_name"/>
         <activity
             android:name=".view.ui.SignInActivity"
