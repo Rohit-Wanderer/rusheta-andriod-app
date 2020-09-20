@@ -2,6 +2,8 @@ package com.example.rusheta.view.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
-public class MyListAdapter extends RecyclerView.Adapter{
+public class MyListAdapter extends RecyclerView.Adapter {
     private static final int VIEW_TYPE_TEXT_SENT = 1;
     private static final int VIEW_TYPE_TEXT_RECEIVED = 2;
     private static final int VIEW_TYPE_IMAGE_SENT = 3;
@@ -44,7 +46,7 @@ public class MyListAdapter extends RecyclerView.Adapter{
     public int getItemViewType(int position) {
         UserMessage message = messageList.get(position);
 
-            return message.getMsgType();
+        return message.getMsgType();
 
     }
 
@@ -106,19 +108,14 @@ public class MyListAdapter extends RecyclerView.Adapter{
         }
 
         void bind(UserMessage message) {
-
-            messageText.setText(message.getMessage().toString());
-
-            // Format the stored timestamp into a readable String using method.
-            SimpleDateFormat formatter= new SimpleDateFormat("HH:mm:ss");
-            timeText.setText(formatter.format(message.getTimeReceived()));
+            messageText.setText(message.getMessage());
+            timeText.setText(message.getTimeReceived());
         }
     }
 
     private class SentImageHolder extends RecyclerView.ViewHolder {
         TextView timeText;
         ImageView imageView;
-
 
         SentImageHolder(View itemView) {
             super(itemView);
@@ -128,11 +125,16 @@ public class MyListAdapter extends RecyclerView.Adapter{
         }
 
         void bind(UserMessage message) {
+            String image = message.getMessage();
+            try {
+                byte[] encodeByte = Base64.decode(image, Base64.DEFAULT);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+                imageView.setImageBitmap(bitmap);
+                timeText.setText(message.getTimeReceived());
+            } catch (Exception e) {
+                e.getMessage();
+            }
 
-            imageView.setImageBitmap((Bitmap) message.getMessage());
-            // Format the stored timestamp into a readable String using method.
-            SimpleDateFormat formatter= new SimpleDateFormat("HH:mm:ss");
-            timeText.setText(formatter.format(message.getTimeReceived()));
         }
     }
 
@@ -150,20 +152,17 @@ public class MyListAdapter extends RecyclerView.Adapter{
         }
 
         void bind(UserMessage message) {
-            messageText.setText(message.getMessage().toString());
-
-            // Format the stored timestamp into a readable String using method.
-            SimpleDateFormat formatter= new SimpleDateFormat("HH:mm:ss");
-            timeText.setText(formatter.format(message.getTimeReceived()));
-            nameText.setText(message.getMsgSender());
+            messageText.setText(message.getMessage());
+            timeText.setText(message.getTimeReceived());
+            nameText.setText(message.getSender());
 
             // Insert the profile image from the URL into the ImageView.
-         //   Utils.displayRoundImageFromUrl(mContext, message.getSender().getProfileUrl(), profileImage);
+            //   Utils.displayRoundImageFromUrl(mContext, message.getSender().getProfileUrl(), profileImage);
         }
     }
 
     private class ReceivedImageHolder extends RecyclerView.ViewHolder {
-        TextView  timeText, nameText;
+        TextView timeText, nameText;
         ImageView messageImage, profileImage;
 
         ReceivedImageHolder(View itemView) {
@@ -176,12 +175,16 @@ public class MyListAdapter extends RecyclerView.Adapter{
         }
 
         void bind(UserMessage message) {
-            messageImage.setImageBitmap((Bitmap) message.getMessage());
-
-            // Format the stored timestamp into a readable String using method.
-            SimpleDateFormat formatter= new SimpleDateFormat("HH:mm:ss");
-            timeText.setText(formatter.format(message.getTimeReceived()));
-            nameText.setText(message.getMsgSender());
+            String image = message.getMessage();
+            try {
+                byte[] encodeByte = Base64.decode(image, Base64.DEFAULT);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+                messageImage.setImageBitmap(bitmap);
+            } catch (Exception e) {
+                e.getMessage();
+            }
+            timeText.setText(message.getTimeReceived());
+            nameText.setText(message.getSender());
         }
     }
 

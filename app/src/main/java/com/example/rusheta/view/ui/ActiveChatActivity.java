@@ -22,6 +22,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,14 +31,14 @@ import com.example.rusheta.service.model.ImagePath;
 import com.example.rusheta.service.remote.JsonApiPlaceHolder;
 import com.example.rusheta.R;
 import com.example.rusheta.service.model.Response;
-import com.example.rusheta.service.model.UserImage;
 import com.example.rusheta.service.model.UserMessage;
-import com.example.rusheta.service.model.UserText;
 import com.example.rusheta.service.model.Chat;
+import com.example.rusheta.service.remote.RetrofitService;
 import com.example.rusheta.utils.ObjectSerializationClass;
 import com.example.rusheta.utils.CryptoClass;
 import com.example.rusheta.utils.signal.SignalProtocolKeyGen;
 import com.example.rusheta.view.adapter.MyListAdapter;
+import com.example.rusheta.view.viewmodel.ActiveChatViewModel;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
@@ -77,27 +79,87 @@ public class ActiveChatActivity extends AppCompatActivity {
     private static final int VIEW_TYPE_TEXT_RECEIVED = 2;
     private static final int VIEW_TYPE_IMAGE_SENT = 3;
     private static final int VIEW_TYPE_IMAGE_RECEIVED = 4;
-        private static final String BASE_URL = "http://10.0.2.2:3000";
-//    private static final String BASE_URL = "http://localhost:3000";
-//    private static final String BASE_URL = "https://rusheta.herokuapp.com/";
 
-    Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
-    JsonApiPlaceHolder jsonApiPlaceHolder = retrofit.create(JsonApiPlaceHolder.class);
-
+    ActiveChatViewModel activeChatViewModel;
     RecyclerView recyclerView;
     MyListAdapter myListAdapter;
     ArrayList<UserMessage> messageList = new ArrayList<>();
-    private Socket socket;
     private String Username;
+    private String contactId;
     private Chat chat;
-    private String myPhone;
     private String AESKey;
     SignalProtocolKeyGen signalProtocolKeyGen;
     SharedPreferences sharedPreferences;
     CryptoClass cryptoClass;
+    SimpleDateFormat formatterDate = new SimpleDateFormat("HH:mm:ss");
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+
+        chat = (Chat) getIntent().getExtras().getSerializable("Chat");
+        Username = chat.getName();
+        contactId = chat.getContactId();
+        String sendPhone = chat.getPhone();
+        AESKey = chat.getAESKey();
+        setTitle(Username);
+        setContentView(R.layout.activity_chat);
+
+
+        recyclerView = findViewById(R.id.chatRecyclerView);
+        LinearLayoutManager myLinearLayoutManager = new LinearLayoutManager(this);
+        myLinearLayoutManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(myLinearLayoutManager);
+
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        String key = new String(AESKey.getBytes(), 0, 32, Charset.defaultCharset());
+        String IV = new String(AESKey.getBytes(), 16, 16, Charset.defaultCharset());
+        cryptoClass = new CryptoClass(key.getBytes(), IV.getBytes());
+        sharedPreferences
+                = getSharedPreferences("RushetaData",
+                MODE_PRIVATE);
+        String myPhone = sharedPreferences.getString("phone", "");
+        signalProtocolKeyGen = new SignalProtocolKeyGen(sharedPreferences);
+
+
+        ViewModelProvider.Factory factory = new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
+                return (T) new ActiveChatViewModel(getApplication(),
+                        contactId);
+            }
+        };
+
+        activeChatViewModel = new ViewModelProvider(this, factory).get(ActiveChatViewModel.class);
+        activeChatViewModel.getAllMessages().observe(this, messages -> {
+            messageList = (ArrayList<UserMessage>) messages;
+            myListAdapter = new MyListAdapter(ActiveChatActivity.this, messageList, Username);
+            recyclerView.setAdapter(myListAdapter);
+        });
+        myListAdapter = new MyListAdapter(this, messageList, Username);
+        recyclerView.setAdapter(myListAdapter);
+
+
+        mSocket.connect();
+        mSocket.emit("join", myPhone);
+        mSocket.on("receiveSecret", onReceiveSecret);
+        try {
+            String identityKeyString = ObjectSerializationClass.getStringFromObject(
+                    signalProtocolKeyGen.getIdentityKeyPair().getKp().getPublic()
+            );
+            String ephemeralKeyString = ObjectSerializationClass.getStringFromObject(
+                    signalProtocolKeyGen.getEphemeralKeyPair().getKp().getPublic()
+            );
+            mSocket.emit("sendSecret", sendPhone, identityKeyString, ephemeralKeyString);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mSocket.on("message", onNewMessage);
+        mSocket.on("image", onNewImage);
+    }
 
 
     @Override
@@ -117,6 +179,8 @@ public class ActiveChatActivity extends AppCompatActivity {
             } else {
                 getPhoto();
             }
+        } else if (item.getItemId() == R.id.clear_chat) {
+            activeChatViewModel.deleteAll();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -125,21 +189,21 @@ public class ActiveChatActivity extends AppCompatActivity {
 
     {
         try {
-            mSocket = IO.socket(BASE_URL);
+            mSocket = IO.socket(RetrofitService.getBaseUrl());
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
     }
 
-    public void displayMessage(String message, String username) {
+    public void displayMessage(String message) {
         Date now = new Date();
-        UserMessage newMsg = new UserText(VIEW_TYPE_TEXT_RECEIVED, message, now, username);
-        messageList.add(newMsg);
+        UserMessage newMsg = new UserMessage(VIEW_TYPE_TEXT_RECEIVED, formatterDate.format(now), contactId, Username, message);
+        activeChatViewModel.insert(newMsg);
         myListAdapter.notifyDataSetChanged();
         recyclerView.setAdapter(myListAdapter);
     }
 
-    public void displayImage(String path, String username) {
+    public void displayImage(String path) {
 
         ImagePath imagePath = new ImagePath();
 
@@ -150,7 +214,7 @@ public class ActiveChatActivity extends AppCompatActivity {
 
         String token = sharedPreferences.getString("token", "");
 
-        Call<ResponseBody> call = jsonApiPlaceHolder.getImage(token, imagePath);
+        Call<ResponseBody> call = RetrofitService.getInterface().getImage(token, imagePath);
 
         call.enqueue(new Callback<ResponseBody>() {
             @Override
@@ -171,11 +235,15 @@ public class ActiveChatActivity extends AppCompatActivity {
                             File imgFile = new File(getExternalFilesDir(null) + File.separator + fileName);
                             if (imgFile.exists()) {
                                 Bitmap image = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-                                UserMessage newmsg = new UserImage(VIEW_TYPE_IMAGE_RECEIVED, image, now, Username);
-                                messageList.add(newmsg);
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                image.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                                byte[] b = baos.toByteArray();
+                                String temp = Base64.encodeToString(b, Base64.DEFAULT);
+                                UserMessage newMsg = new UserMessage(VIEW_TYPE_IMAGE_RECEIVED, formatterDate.format(now), contactId, Username, temp);
+                                activeChatViewModel.insert(newMsg);
                                 myListAdapter.notifyDataSetChanged();
 
-                                Call<ResponseBody> callDelete = jsonApiPlaceHolder.deleteImage(token, imagePath);
+                                Call<ResponseBody> callDelete = RetrofitService.getInterface().deleteImage(token, imagePath);
                                 callDelete.enqueue(new Callback<ResponseBody>() {
                                     @Override
                                     public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
@@ -268,8 +336,8 @@ public class ActiveChatActivity extends AppCompatActivity {
             mSocket.emit("messageDetection", Username, chat.getPhone(), encryptedMsg);
 
             Date now = new Date();
-            UserMessage newMsg = new UserText(VIEW_TYPE_TEXT_SENT, msg, now, Username);
-            messageList.add(newMsg);
+            UserMessage newMsg = new UserMessage(VIEW_TYPE_TEXT_SENT, formatterDate.format(now), contactId, Username, msg);
+            activeChatViewModel.insert(newMsg);
             myListAdapter.notifyDataSetChanged();
             recyclerView.setAdapter(myListAdapter);
             editText.setText("");
@@ -289,7 +357,7 @@ public class ActiveChatActivity extends AppCompatActivity {
         String token = sharedPreferences.getString("token", "");
 
 
-        Call<Response> call = jsonApiPlaceHolder.uploadImage(token, body);
+        Call<Response> call = RetrofitService.getInterface().uploadImage(token, body);
 
         call.enqueue(new Callback<Response>() {
             @Override
@@ -298,15 +366,19 @@ public class ActiveChatActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
 
                     Date now = new Date();
-                    UserMessage newmsg = new UserImage(VIEW_TYPE_IMAGE_SENT, image, now, Username);
-                    messageList.add(newmsg);
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    image.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                    byte[] b = baos.toByteArray();
+                    String temp = Base64.encodeToString(b, Base64.DEFAULT);
+
+                    UserMessage newMsg = new UserMessage(VIEW_TYPE_IMAGE_SENT, formatterDate.format(now), contactId, Username, temp);
+                    activeChatViewModel.insert(newMsg);
                     myListAdapter.notifyDataSetChanged();
                     mSocket.emit("imageDetection", Username, chat.getPhone(), response.body().getPath());
 
                 } else {
 
                     ResponseBody errorBody = response.errorBody();
-
                     Gson gson = new Gson();
 
                     try {
@@ -332,21 +404,16 @@ public class ActiveChatActivity extends AppCompatActivity {
     private Emitter.Listener onNewMessage = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    JSONObject data = (JSONObject) args[0];
-                    try {
-                        String encryptedMessage = data.getString("message");
-                        String message = new String(cryptoClass.decrypt(Base64.decode(encryptedMessage.getBytes(), Base64.DEFAULT)));
-                        String username = data.getString("senderNickname");
-                        if (!username.equals(Username))
-                            displayMessage(message, username);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-
+            runOnUiThread(() -> {
+                JSONObject data = (JSONObject) args[0];
+                try {
+                    String encryptedMessage = data.getString("message");
+                    String message = new String(cryptoClass.decrypt(Base64.decode(encryptedMessage.getBytes(), Base64.DEFAULT)));
+                    String username = data.getString("senderNickname");
+                    if (!username.equals(Username))
+                        displayMessage(message);
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             });
         }
@@ -368,55 +435,10 @@ public class ActiveChatActivity extends AppCompatActivity {
                 }
 
                 if (!username.equals(Username))
-                    displayImage(path, username);
+                    displayImage(path);
             });
         }
     };
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        chat = (Chat) getIntent().getExtras().getSerializable("Chat");
-        Username = chat.getName();
-        String sendPhone = chat.getPhone();
-        AESKey = chat.getAESKey();
-        setTitle(chat.getName());
-        setContentView(R.layout.activity_chat);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
-        String key = new String(AESKey.getBytes(), 0, 32, Charset.defaultCharset());
-        String IV = new String(AESKey.getBytes(), 16, 16, Charset.defaultCharset());
-        cryptoClass = new CryptoClass(key.getBytes(), IV.getBytes());
-        sharedPreferences
-                = getSharedPreferences("RushetaData",
-                MODE_PRIVATE);
-        myPhone = sharedPreferences.getString("phone", "");
-        signalProtocolKeyGen = new SignalProtocolKeyGen(sharedPreferences);
-        recyclerView = findViewById(R.id.chatRecyclerView);
-        LinearLayoutManager myLinearLayoutManager = new LinearLayoutManager(this);
-        myLinearLayoutManager.setStackFromEnd(true);
-        recyclerView.setLayoutManager(myLinearLayoutManager);
-
-        myListAdapter = new MyListAdapter(this, messageList, Username);
-        recyclerView.setAdapter(myListAdapter);
-        mSocket.connect();
-        mSocket.emit("join", myPhone);
-        mSocket.on("receiveSecret", onReceiveSecret);
-        try {
-            String identityKeyString = ObjectSerializationClass.getStringFromObject(
-                    signalProtocolKeyGen.getIdentityKeyPair().getKp().getPublic()
-            );
-            String ephemeralKeyString = ObjectSerializationClass.getStringFromObject(
-                    signalProtocolKeyGen.getEphemeralKeyPair().getKp().getPublic()
-            );
-            mSocket.emit("sendSecret", sendPhone, identityKeyString, ephemeralKeyString);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mSocket.on("message", onNewMessage);
-        mSocket.on("image", onNewImage);
-
-
-    }
 
     private Emitter.Listener onReceiveSecret = new Emitter.Listener() {
         @Override

@@ -13,6 +13,10 @@ public class RetrofitService {
             .addConverterFactory(GsonConverterFactory.create())
             .build();
 
+    public static String getBaseUrl() {
+        return BASE_URL;
+    }
+
     public static JsonApiPlaceHolder getInterface() {
         return retrofit.create(JsonApiPlaceHolder.class);
     }

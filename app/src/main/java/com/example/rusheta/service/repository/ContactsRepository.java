@@ -10,7 +10,9 @@ import com.example.rusheta.service.remote.JsonApiPlaceHolder;
 import com.example.rusheta.service.remote.RetrofitService;
 
 import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
